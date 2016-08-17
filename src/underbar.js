@@ -162,12 +162,22 @@
   //          No accumulator is given so the first element is used.
   _.reduce = function(collection, iterator, accumulator) {
     var result = accumulator;
-    if (accumulator === undefined){
-      result = collection.shift();
+    var isFirst = true;
+
+    if (result === undefined) {
+      _.each(collection, function(element, index){
+        if (isFirst){
+          isFirst = false;
+          result = element;
+        } else {
+          result = iterator(result, element, index, collection);
+        }
+      });
+    } else {
+      _.each(collection, function(element, index){
+        result = iterator(result, element, index, collection);
+      });
     }
-    _.each(collection, function(element){
-      result = iterator(result, element);
-    });
 
     return result;
   };
@@ -189,8 +199,8 @@
   _.every = function(collection, iterator) {
     // TIP: Try re-using reduce() here.
     iterator = iterator || _.identity;
-    return _.reduce(collection, function(previous, item){
-      return (!previous) ? false : !!iterator(item);
+    return _.reduce(collection, function(previous, item, index){
+      return (!previous) ? false : !!iterator(item, index, collection);
     }, true);
   };
 
@@ -199,9 +209,9 @@
   _.some = function(collection, iterator) {
     // TIP: There's a very clever way to re-use every() here.
     iterator = iterator || _.identity;
-    return _.reduce(collection, function(previous, item){
-      return (previous===true || !!iterator(item));
-    }, false);
+    return !_.every(collection, function(item, index){
+      return (!!iterator(item, index, collection)) === false;
+    });
   };
 
 
